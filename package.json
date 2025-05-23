@@ -1,0 +1,25 @@
+{
+  "name": "trading-algo",
+  "version": "1.0.0",
+  "description": "Trading algorithm",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BeNikk/trading-algo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BeNikk/trading-algo/issues"
+  },
+  "homepage": "https://github.com/BeNikk/trading-algo#readme",
+  "dependencies": {
+    "@types/express": "^5.0.2",
+    "express": "^5.1.0",
+    "typescript": "^5.8.3"
+  }
+}
