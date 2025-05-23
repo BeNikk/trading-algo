@@ -1,0 +1,2 @@
+# trading-algo
+Trading algorithm 
