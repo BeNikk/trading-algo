@@ -1,0 +1,143 @@
+import express, { Request, Response } from 'express';
+const orderBook = express.Router();
+
+orderBook.get('/',(req:Request,res:Response)=>{
+    res.json({message:"Test route"});
+})
+
+interface UsersInterface{
+    id:number,
+    Balances:{
+        Tata:number,
+        Inr:number
+    }
+}
+
+const Users:UsersInterface[] = [{
+    id:1,
+    Balances:{
+        Tata:500,
+        Inr:50000
+    }
+},{
+    id:2,
+    Balances:{
+        Tata:300,
+        Inr:70000
+    }
+},{
+    id:3,
+    Balances:{
+        Tata:600,
+        Inr:100000
+    }
+}]
+
+interface OrderInterface{
+    userId:number,
+    price:number,
+    quantity:number,
+}
+
+let sellStockOrders:OrderInterface[]=[];
+let buyStockOrders:OrderInterface[]=[];
+
+
+orderBook.post('/order',(req:Request,res:Response)=>{
+    let {id,side,price,quantity} = req.body;
+    const user = Users.find((user)=>user.id==id);
+    if(!user){
+        res.json({message:"User does not exist"});
+        return;
+    }
+    if(side=="buy"){
+        if(price*quantity > user.Balances.Inr){
+            res.json({message:"Insufficient INR Balance"});
+            return;
+        }
+
+        for(let i=0;i<sellStockOrders.length;i++){
+            //selling price is less than or equal to the the buying price, make the sale;
+            if(sellStockOrders[i].price<=price){
+                const tradePrice = sellStockOrders[i].price;
+                const tradeQuantity = sellStockOrders[i].quantity;
+                // make the trade 
+                const sellingUser = Users.find((usr)=>sellStockOrders[i].userId == usr.id);
+                if(!sellingUser) return;
+                //i have to check 2 test cases, based on the quantity of the stock sellable;
+                if(tradeQuantity>quantity){
+                    sellingUser.Balances.Tata -=quantity;
+                    sellingUser.Balances.Inr +=quantity*tradePrice;
+                    user.Balances.Tata+=quantity;
+                    user.Balances.Inr -= quantity*tradePrice;
+                    sellStockOrders[i].quantity -= quantity;
+                    quantity = 0;
+                    break;
+                }
+                else{
+                    sellingUser.Balances.Tata -= tradeQuantity;
+                    sellingUser.Balances.Inr += tradeQuantity*tradePrice;
+                    user.Balances.Tata += tradeQuantity;
+                    user.Balances.Inr -= tradeQuantity*tradePrice;
+                    quantity -=tradeQuantity;
+                    sellStockOrders.splice(i,1);                    
+                    continue;
+                }
+
+            }
+        }
+        if(quantity>0){
+            buyStockOrders.push({
+                userId:user.id,
+                price:price,
+                quantity:quantity
+            })
+        }
+        res.json({message:"Order fulfilled"});
+        return;
+        
+
+    }
+    if(side=="sell"){
+        if(user.Balances.Tata<quantity){
+            res.json({message:"Insufficient stock balance"})
+            return;
+        }
+        for(let i=0;i<buyStockOrders.length;i++){
+            //buying price is greater than or equal to selling price, sell the stock
+            if(buyStockOrders[i].price>=price){
+                const tradeQuantity = buyStockOrders[i].quantity;
+                const tradePrice = buyStockOrders[i].price;
+                let buyer = Users.find((usr)=>usr.id==buyStockOrders[i].userId);
+                if(!buyer)return;
+                if(tradeQuantity>quantity){
+                    /*more people want to buy this stock at this price, so fulfill the order
+                    we will add money to the seller account, we will subtract stocks from the seller account, we will 
+                    subtract money from buyer account, we will add stocks to buyer account, and update the buyOrder book with the
+                    updated quantity of stocks and continue;
+                    */
+                   user.Balances.Inr +=tradePrice*quantity;
+                   buyer.Balances.Inr -= tradePrice*quantity;
+                   user.Balances.Inr -= quantity;
+                   buyer.Balances.Tata += quantity;
+
+                }else{
+
+                }
+            }
+        }
+        if(quantity>0){
+            sellStockOrders.push({
+                quantity,
+                price,
+                userId:user.id
+            })
+        }
+    }
+
+
+})
+
+
+export default orderBook;
+
