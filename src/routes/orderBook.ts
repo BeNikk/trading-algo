@@ -118,10 +118,23 @@ orderBook.post('/order',(req:Request,res:Response)=>{
                     */
                    user.Balances.Inr +=tradePrice*quantity;
                    buyer.Balances.Inr -= tradePrice*quantity;
-                   user.Balances.Inr -= quantity;
+                   user.Balances.Tata -= quantity;
                    buyer.Balances.Tata += quantity;
+                   //order fulfilled, now we just need to update the buying orders
+                   buyStockOrders[i].quantity -= quantity;
+
+                   break;
 
                 }else{
+                    //quantity of stock selling is more than what is buying;
+                    user.Balances.Inr += tradePrice*tradeQuantity;
+                    buyer.Balances.Inr -= tradePrice*tradeQuantity;
+                    user.Balances.Tata -=tradeQuantity;
+                    buyer.Balances.Tata += tradeQuantity;
+                    quantity -= tradeQuantity;
+                    buyStockOrders.splice(i,1);
+                    i--;
+                    
 
                 }
             }
@@ -130,9 +143,11 @@ orderBook.post('/order',(req:Request,res:Response)=>{
             sellStockOrders.push({
                 quantity,
                 price,
-                userId:user.id
+                userId:id
             })
         }
+        res.json({message:"Order fulfilled"});
+        return;
     }
 
 
