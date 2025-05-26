@@ -172,6 +172,33 @@ orderBook.get("/user/:userId",(req:Request,res:Response)=>{
     }
 })
 
+orderBook.get('/depth',(req:Request,res:Response)=>{
+    const depth:{
+        [price:number]:{
+            type:"sell"|"buy",
+            quantity:number,
+        } 
+    } = {};
+    for(const order of buyStockOrders){
+        if(!depth[order.price]){
+            depth[order.price] = {type:"buy",quantity:order.quantity}
+        }
+        else{
+            depth[order.price].quantity +=order.quantity;
+        }
+    }
+    for(const order of sellStockOrders){
+        if(!depth[order.price]){
+            depth[order.price] = {type:"sell",quantity:order.quantity}
+        }
+        else{
+            depth[order.price].quantity+=order.quantity;
+        }
+    }
+    res.json({depth});
+    return;
+})
+
 
 export default orderBook;
 
