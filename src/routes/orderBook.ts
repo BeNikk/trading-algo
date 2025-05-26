@@ -55,6 +55,8 @@ orderBook.post('/order',(req:Request,res:Response)=>{
             res.json({message:"Insufficient INR Balance"});
             return;
         }
+        sellStockOrders.sort((a, b) => a.price - b.price);
+
 
         for(let i=0;i<sellStockOrders.length;i++){
             //selling price is less than or equal to the the buying price, make the sale;
@@ -103,6 +105,7 @@ orderBook.post('/order',(req:Request,res:Response)=>{
             res.json({message:"Insufficient stock balance"})
             return;
         }
+        buyStockOrders.sort((a, b) => b.price - a.price);
         for(let i=0;i<buyStockOrders.length;i++){
             //buying price is greater than or equal to selling price, sell the stock
             if(buyStockOrders[i].price>=price){
@@ -122,7 +125,6 @@ orderBook.post('/order',(req:Request,res:Response)=>{
                    buyer.Balances.Tata += quantity;
                    //order fulfilled, now we just need to update the buying orders
                    buyStockOrders[i].quantity -= quantity;
-
                    break;
 
                 }else{
@@ -134,7 +136,6 @@ orderBook.post('/order',(req:Request,res:Response)=>{
                     quantity -= tradeQuantity;
                     buyStockOrders.splice(i,1);
                     i--;
-                    
 
                 }
             }
@@ -149,8 +150,26 @@ orderBook.post('/order',(req:Request,res:Response)=>{
         res.json({message:"Order fulfilled"});
         return;
     }
+})
 
-
+orderBook.get("/user/:userId",(req:Request,res:Response)=>{
+    try{
+        let userId = req.params.userId;
+        const user = Users.find(x=>x.id==parseInt(userId));
+        if(!user){
+            res.json({message:"No such user found"});
+            return;
+        }
+        res.json({
+            message:"This is a user's balance request",
+            stockBalances:user.Balances.Tata,
+            rupeeBalances:user.Balances.Inr
+        });
+        return;
+    }
+    catch(e){
+        console.log(`Error occured ${e}`);
+    }
 })
 
 
